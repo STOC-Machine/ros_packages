@@ -1,0 +1,5 @@
+<launch>
+	<include file="$(find mavros)/launch/px4_sitl.launch" />
+
+	<node pkg="offb" type="offb_node" name="offb" output="screen" />
+</launch>

@@ -1,0 +1,5 @@
+<launch>
+	<include file="$(find mavros)/launch/px4_offb.launch"/>
+
+	<node pkg="offb_py" type="hover_test.py" name="hover_test_node" output="screen" /> 
+</launch>

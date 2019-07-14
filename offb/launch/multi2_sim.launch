@@ -1,10 +1,33 @@
 <?xml version="1.0"?>
 <launch>
+		<!-- launch gazebo -->
+		<arg name="vehicle" default="iris"/>
+		<arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
+		<include file="$(find gazebo_ros)/launch/empty_world.launch">
+				<arg name="gui" value="true"/>
+				<arg name="world_name" value="$(arg world)"/>
+				<arg name="debug" value="false"/>
+				<arg name="verbose" value="false"/>
+				<arg name="paused" value="false"/>
+		</include>
     <!-- UAV0 -->
     <group ns="uav0">
         <!-- MAVROS and vehicle configs -->
         <arg name="ID" value="0"/>
         <arg name="fcu_url" default="udp://:14540@localhost:14580"/>
+				<!-- px4 and vehicle spawn -->
+				<include file="$(find px4)/launch/single_vehicle_spawn.launch">
+						<arg name="x" value="0"/>
+						<arg name="y" value="0"/>
+						<arg name="z" value="0"/>
+						<arg name="R" value="0"/>
+						<arg name="P" value="0"/>
+						<arg name="Y" value="0"/>
+						<arg name="vehicle" value="$(arg vehicle)"/>
+						<arg name="mavlink_udp_port" value="14560"/>
+						<arg name="mavlink_tcp_port" value="4560"/>
+						<arg name="ID" value="$(arg ID)"/>
+				</include>
         <!-- MAVROS -->
         <include file="$(find mavros)/launch/px4.launch">
             <arg name="fcu_url" value="$(arg fcu_url)"/>
@@ -17,6 +40,20 @@
     <group ns="uav1">
         <arg name="ID" value="1"/>
         <arg name="fcu_url" default="udp://:14541@localhost:14581"/>
+				<!-- px4 and vehicle spawn -->
+				<include file="$(find px4)/launch/single_vehicle_spawn.launch">
+						<arg name="x" value="1"/>
+						<arg name="y" value="0"/>
+						<arg name="z" value="0"/>
+						<arg name="R" value="0"/>
+						<arg name="P" value="0"/>
+						<arg name="Y" value="0"/>
+						<arg name="vehicle" value="$(arg vehicle)"/>
+						<arg name="mavlink_udp_port" value="14561"/>
+						<arg name="mavlink_tcp_port" value="4561"/>
+						<arg name="ID" value="$(arg ID)"/>
+				</include>
+				<!-- Mavros -->
         <include file="$(find mavros)/launch/px4.launch">
             <arg name="fcu_url" value="$(arg fcu_url)"/>
             <arg name="gcs_url" value=""/>
@@ -24,6 +61,8 @@
             <arg name="tgt_component" value="1"/>
         </include>
     </group>
+
+		<node pkg="offb" type="offb_node" name="offb_node" output="screen" />
 </launch>
 
 

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+
+	<!-- sitl and gazebo -->
+	<include file="$(find px4)/launch/posix_sitl.launch"/>
+
+	<!-- mavros -->
+	<include file="$(find mavros)/launch/px4.launch">
+		<arg name="fcu_url" value="udp://:14540@"/>
+	</include>
+
+	<!-- python node -->
+	<node pkg="offb_py" type="hover_test.py" name="hover_test_node" output="screen" /> 
+
+</launch>

@@ -24,18 +24,20 @@ class multi_drone(object):
         self.state.connected = False
         self.last_time = rospy.Time.now()
         self.rate = rospy.Rate(20)
+        self.ctrl_c = False
 
-    def shutdown_hook(self):
+    def shutdownhook(self):
         self.set_pose(0,0,0)
         for _iter in range(80):
             self.pose_pub.publish(self.pose_obj)
             self.rate.sleep()
+        self.ctrl_c = True
 
     def state_cb(self, state_msg):
         self.state = state_msg
 
     def wait_for_connection(self):
-        while not rospy.is_shutdown() and not self.state.connected:
+        while not self.ctrl_c and not self.state.connected:
             self.rate.sleep()
 
     def set_pose(self, x, y, z):
@@ -55,8 +57,7 @@ class multi_drone(object):
         self.arming_srv_msg.value = True
 
         #while loop for arming, offb mode, and publish position
-        ctrl_c = False
-        while not ctrl_c:
+        while not self.ctrl_c:
             #set to offb mode
             if self.state.mode != "OFFBOARD" and (rospy.Time.now() - self.last_time > rospy.Duration(5.0) ):
                 if self.mode_client.call(self.offb_srv_msg).mode_sent:
@@ -92,7 +93,7 @@ if __name__ == "__main__":
 
     t0 = threading.Thread(target=fly_0, name='t0')
     t1 = threading.Thread(target=fly_1, name='t1')
-
+"""
     t0.start()
     t1.start()
 
@@ -101,3 +102,4 @@ if __name__ == "__main__":
 
     #drone0.fly()
     #drone1.fly()
+"""

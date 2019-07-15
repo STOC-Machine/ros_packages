@@ -17,6 +17,7 @@ void state_cb(const mavros_msgs::State::ConstPtr& msg){
 
 int main(int argc, char **argv)
 {
+		std::cout << "initializing offb_node" << std::endl;
     ros::init(argc, argv, "offb_node");
     ros::NodeHandle nh;
 
@@ -32,11 +33,13 @@ int main(int argc, char **argv)
     //the setpoint publishing rate MUST be faster than 2Hz
     ros::Rate rate(20.0);
 
+		std::cout << "waiting for connection..." << std::endl;
     // wait for FCU connection
     while(ros::ok() && !current_state.connected){
         ros::spinOnce();
         rate.sleep();
     }
+		std::cout << "Connected!!" << std::endl;
 
     geometry_msgs::PoseStamped pose;
     pose.pose.position.x = 0;

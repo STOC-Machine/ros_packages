@@ -1,17 +1,20 @@
 #! /usr/bin/env python
 
-from helmet_detection import 
-from hover_test import hover_drone
-from rangeFinder import range_finder
+from multi_drone import multi_drone
+import threading
 import rospy
 
 if __name__ == '__main__':
-   rospy.init_node('main_node')
+    rospy.init_node('main_node')
+    
+    #create threads
+    drone0 = multi_drone(0)
+    drone_thread0 = threading.Thread(target=drone0.fly())
 
-   drone = hover_drone()
-   
-    #test ultrasonic range sensor
-   range_sensor = range_finder()
-   range_sensor.loop()
+    drone1 = multi_drone(1)
+    drone_thread1 = threading.Thread(target=drone1.fly())
 
-   drone.fly()
+
+    #wait for drones to exit
+    drone_thread0.join()
+    drone_thread1.join()

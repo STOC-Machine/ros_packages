@@ -5,13 +5,17 @@ from mavros_msgs.srv import CommandBool, CommandBoolRequest
 from mavros_msgs.srv import SetMode, SetModeRequest
 from mavros_msgs.msg import State
 from geometry_msgs.msg import PoseStamped
+import threading
 
 class multi_drone(object):
-    def __init__(self):
-        self.state_sub = rospy.Subscriber('/uav0/mavros/state', State, self.state_cb)
-        self.pose_pub = rospy.Publisher('/uav0/mavros/setpoint_position/local', PoseStamped, queue_size=1)
-        self.arming_client = rospy.ServiceProxy('/uav0/mavros/cmd/arming', CommandBool)
-        self.mode_client = rospy.ServiceProxy('/uav0/mavros/set_mode', SetMode)
+    def __init__(self, num):
+        if num < 0 or num > 80:
+            print "Error: initializing ", num, " drone. Bad number"
+            self.shutdown_hook()
+        self.state_sub = rospy.Subscriber('/uav' + str(num) + '/mavros/state', State, self.state_cb)
+        self.pose_pub = rospy.Publisher('/uav' + str(num) + '/mavros/setpoint_position/local', PoseStamped, queue_size=1)
+        self.arming_client = rospy.ServiceProxy('/uav' + str(num) + '/mavros/cmd/arming', CommandBool)
+        self.mode_client = rospy.ServiceProxy('/uav' + str(num) + '/mavros/set_mode', SetMode)
 
         self.pose_obj = PoseStamped()
         self.offb_srv_msg = SetModeRequest()
@@ -20,6 +24,12 @@ class multi_drone(object):
         self.state.connected = False
         self.last_time = rospy.Time.now()
         self.rate = rospy.Rate(20)
+
+    def shutdown_hook(self):
+        self.set_pose(0,0,0)
+        for _iter in range(80):
+            self.pose_pub.publish(self.pose_obj)
+            self.rate.sleep()
 
     def state_cb(self, state_msg):
         self.state = state_msg
@@ -71,5 +81,23 @@ if __name__ == "__main__":
     rospy.init_node('multi_drone_node')
     rospy.loginfo("initialized multi_drone_node")
     
-    drone = multi_drone()
-    drone.fly()
+    drone0 = multi_drone(0)
+    drone1 = multi_drone(1)
+
+    def fly_0():
+        drone0.fly()
+
+    def fly_1():
+        drone1.fly()
+
+    t0 = threading.Thread(target=fly_0, name='t0')
+    t1 = threading.Thread(target=fly_1, name='t1')
+
+    t0.start()
+    t1.start()
+
+    t0.join()
+    t1.join()
+
+    #drone0.fly()
+    #drone1.fly()

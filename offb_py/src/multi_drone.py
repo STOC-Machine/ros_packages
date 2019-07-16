@@ -5,6 +5,7 @@ from mavros_msgs.srv import CommandBool, CommandBoolRequest
 from mavros_msgs.srv import SetMode, SetModeRequest
 from mavros_msgs.msg import State
 from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Float32MultiArray
 import threading
 
 class multi_drone(object):
@@ -12,11 +13,20 @@ class multi_drone(object):
         if num < 0 or num > 80:
             print "Error: initializing ", num, " drone. Bad number"
             self.shutdown_hook()
-        self.state_sub = rospy.Subscriber('/uav' + str(num) + '/mavros/state', State, self.state_cb)
-        self.pose_pub = rospy.Publisher('/uav' + str(num) + '/mavros/setpoint_position/local', PoseStamped, queue_size=1)
-        self.arming_client = rospy.ServiceProxy('/uav' + str(num) + '/mavros/cmd/arming', CommandBool)
-        self.mode_client = rospy.ServiceProxy('/uav' + str(num) + '/mavros/set_mode', SetMode)
 
+        #topics
+        self.state_sub = rospy.Subscriber('/uav' + str(num) + '/mavros/state', 
+                State, self.state_cb)
+        self.pose_pub = rospy.Publisher('/uav' + str(num) + 
+                '/mavros/setpoint_position/local', PoseStamped, queue_size=1)
+        self.arming_client = rospy.ServiceProxy('/uav' + str(num) + 
+                '/mavros/cmd/arming', CommandBool)
+        self.mode_client = rospy.ServiceProxy('/uav' + str(num) + 
+                '/mavros/set_mode', SetMode)
+        self.command_sub = rospy.Subscriber('/uav' + str(num) + '/mavros/command',
+                Float32MultiArray, self.cmd_cb)
+
+        #variables
         self.pose_obj = PoseStamped()
         self.offb_srv_msg = SetModeRequest()
         self.arming_srv_msg = CommandBoolRequest()
@@ -25,6 +35,9 @@ class multi_drone(object):
         self.last_time = rospy.Time.now()
         self.rate = rospy.Rate(20)
         self.ctrl_c = False
+
+        #shutdown
+        rospy.on_shutdown(self.shutdownhook)
 
     def shutdownhook(self):
         self.set_pose(0,0,0)
@@ -35,6 +48,10 @@ class multi_drone(object):
 
     def state_cb(self, state_msg):
         self.state = state_msg
+
+    def cmd_cb(self, msg):
+        self.pose_obj.pose.position.x += msg.data[1]
+        self.pose_obj.pose.position.y += msg.data[2]
 
     def wait_for_connection(self):
         while not self.ctrl_c and not self.state.connected:

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+		<!-- launch gazebo -->
+		<arg name="vehicle" default="iris"/>
+		<arg name="world" default="$(find mavlink_sitl_gazebo)/worlds/empty.world"/>
+		<include file="$(find gazebo_ros)/launch/empty_world.launch">
+				<arg name="gui" value="true"/>
+				<arg name="world_name" value="$(arg world)"/>
+				<arg name="debug" value="false"/>
+				<arg name="verbose" value="false"/>
+				<arg name="paused" value="false"/>
+		</include>
+</launch>
+

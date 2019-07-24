@@ -28,12 +28,13 @@
         </include>
     </group>
 
-		<!-- programs -->
+		<!-- programs >
 		<node pkg="offb_py" type="command_main0.py" name="command_main0_node" output="screen" />
 		<node pkg="offb_py" type="command_main1.py" name="command_main1_node" output="screen" />	
 		<node pkg="helmet_detection" type="sensor_main0.py" name="sensor_main0_node" output="screen" />		
 		<node pkg="helmet_detection" type="sensor_main1.py" name="sensro_main1_node" output="screen" />
 		<node pkg="offb_py" type="main_2_drone.py" name="main_2_drone_node" output="screen" />
+< comment out programs -->
 
 </launch>
 

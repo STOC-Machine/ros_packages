@@ -25,6 +25,8 @@ class multi_drone(object):
                 '/mavros/set_mode', SetMode)
         self.command_sub = rospy.Subscriber('/uav' + str(num) + '/mavros/command',
                 Float32MultiArray, self.cmd_cb)
+        self.sensor_sub = rospy.Subscriber('/uav' + str(num) + '/mavros/sensor',
+                Float32MultiArray, self.sensor_cb)
 
         #variables
         self.pose_obj = PoseStamped()
@@ -34,6 +36,8 @@ class multi_drone(object):
         self.state.connected = False
         self.last_time = rospy.Time.now()
         self.rate = rospy.Rate(20)
+        self.helmet_flag = False
+        self.object_flag = False
         self.ctrl_c = False
 
         #shutdown
@@ -50,8 +54,24 @@ class multi_drone(object):
         self.state = state_msg
 
     def cmd_cb(self, msg):
-        self.pose_obj.pose.position.x += msg.data[1]
-        self.pose_obj.pose.position.y += msg.data[2]
+        if msg.data[0] == 6:
+            self.helmet_flag = True
+        else:
+            self.helmet_flag = False
+            if not self.object_flag:
+                self.pose_obj.pose.position.x += msg.data[1]
+                self.pose_obj.pose.orientation.z = msg.data[2]
+                self.pose_obj.pose.orientation.w = msg.data[3]
+
+    def sensor_cb(self, sensor_msg):
+        if sensor_msg.data[3] < 30:
+            self.object_flag = True
+        else:
+            self.object_flag = False
+            if self.helmet_flag:
+                self.pose_obj.pose.position.x += sensor_msg.data[0]
+                self.pose_obj.pose.position.y += sensor_msg.data[0]
+
 
     def wait_for_connection(self):
         while not self.ctrl_c and not self.state.connected:
@@ -93,6 +113,59 @@ class multi_drone(object):
             self.rate.sleep()
 
 
+    def flight_commander(self):
+        position_thread = threading.Thread(target=self.publish_pose)
+        position_thread.start()
+        while not self.ctrl_c:
+            cmd_num = input("1-offb 2-arm 3-takeoff 4-front 5-back 6-right 7-left 8-disarm 9-land 0-exit")
+            if cmd_num == 1:
+                self.set_mode("OFFBOARD")
+            elif cmd_num == 2:
+                self.arm_drone(True)
+            elif cmd_num == 3:
+                self.set_pose(0,0,2)
+            elif cmd_num == 4:
+                self.set_pose(1,0,2)
+            elif cmd_num == 5:
+                self.set_pose(-1,0,2)
+            elif cmd_num == 6:
+                self.set_pose(0,1,2)
+            elif cmd_num == 7:
+                self.set_pose(0,-1,2)
+            elif cmd_num == 8:
+                self.arm_drone(False)
+            elif cmd_num == 9:
+                self.set_mode("AUTO.LAND")
+            elif cmd_num == 0:
+                break
+
+        self.set_mode("AUTO.LAND")
+        self.shutdownhook()
+
+    def set_mode(self, mode_name):
+        self.offb_srv_msg.custom_mode = mode_name
+        while not self.ctrl_c:
+            if self.mode_client.call(self.offb_srv_msg).mode_sent:
+                rospy.loginfo("set to offboard mode!")
+                break
+            for _ in range(40):
+                self.rate.sleep()
+
+    def arm_drone(self, arm_bool):
+        self.arming_srv_msg.value = arm_bool
+        while not self.ctrl_c:
+            if self.arming_client.call(self.arming_srv_msg).success:
+                return_msg = "armed: " + str(arm_bool)
+                rospy.loginfo(return_msg)
+                break
+            for _ in range(40):
+                self.rate.sleep(40)
+
+    def publish_pose(self):
+        while not self.ctrl_c:
+            self.pose_pub.publish(self.pose_obj)
+            self.rate.sleep()
+
 
 #run code if this is the main file
 if __name__ == "__main__":
@@ -100,16 +173,9 @@ if __name__ == "__main__":
     rospy.loginfo("initialized multi_drone_node")
     
     drone0 = multi_drone(0)
-    drone1 = multi_drone(1)
 
-    def fly_0():
-        drone0.fly()
+    drone0.flight_commander()
 
-    def fly_1():
-        drone1.fly()
-
-    t0 = threading.Thread(target=fly_0, name='t0')
-    t1 = threading.Thread(target=fly_1, name='t1')
 """
     t0.start()
     t1.start()

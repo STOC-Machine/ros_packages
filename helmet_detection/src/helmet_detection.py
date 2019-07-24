@@ -128,7 +128,7 @@ def test_pics(n):
         cv2.imshow('ROI',img_ROI)
         cv2.waitKey(0)
 ## Uncomment line below to test many images
-test_pics(11)
+#test_pics(11)
 
 
 ###---------RUN TEST with a video---------###

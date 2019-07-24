@@ -12,7 +12,8 @@ cap = cv2.VideoCapture(0)
 for num in range(5):
     _, frame = cap.read()
     img_ROI, centerX, centerY, (h,w) = test(frame)
-    print num, " x:", centerX, " y:", centerY
+    #print num, " x:", centerX, " y:", centerY
+    print type(frame)
 
 
 print "End helmet test code\n"

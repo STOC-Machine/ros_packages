@@ -62,7 +62,7 @@
         </include>
     </group>
 
-		<node pkg="offb_py" type="main.py" name="main_node" output="screen" />
+		<node pkg="offb_py" type="main_2_drone.py" name="main_2_drone_node" output="screen" />
 </launch>
 
 

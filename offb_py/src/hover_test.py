@@ -28,14 +28,19 @@ class hover_drone(object):
         while not rospy.is_shutdown() and not self.state.connected:
             self.rate.sleep()
 
-    def set_pose(self, x, y, z):
+    def set_pose(self, x, y, z, ox=0, oy=0, oz=0, ow=0):
         self.pose_obj.pose.position.x = x
         self.pose_obj.pose.position.y = y
         self.pose_obj.pose.position.z = z
+        self.pose_obj.pose.orientation.x = ox
+        self.pose_obj.pose.orientation.y = oy
+        self.pose_obj.pose.orientation.z = oz
+        self.pose_obj.pose.orientation.w = ow
+
 
     def fly(self):
         self.wait_for_connection()
-        self.set_pose(0,0,2)
+        self.set_pose(0,0,2,0,0,0)
         for _iterations in range(100):
             self.pose_pub.publish(self.pose_obj)
             self.rate.sleep()
@@ -57,6 +62,10 @@ class hover_drone(object):
                     if self.arming_client.call(self.arming_srv_msg).success:
                         rospy.loginfo("vehicle armed!!")
                     self.last_time = rospy.Time.now()
+
+            #test flight directions
+            if rospy.Time.now() - self.last_time > rospy.Duration(6.0):
+                self.set_pose(0,0,2, 0.0,0.0,0.383,-0.924)
 
             #publish position
             self.pose_pub.publish(self.pose_obj)

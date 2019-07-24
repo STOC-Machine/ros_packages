@@ -4,7 +4,7 @@
     <group ns="uav0">
         <!-- MAVROS and vehicle configs -->
         <arg name="ID" value="0"/>
-        <arg name="fcu_url" default="udp://:14540@localhost:14580"/>
+        <arg name="fcu_url" default="udp://:14570@"/>
         <!-- MAVROS -->
         <include file="$(find mavros)/launch/px4.launch">
             <arg name="fcu_url" value="$(arg fcu_url)"/>
@@ -13,20 +13,13 @@
             <arg name="tgt_component" value="1"/>
         </include>
     </group>
-		<!-- UAV1 -->
-    <group ns="uav1">
-        <arg name="ID" value="1"/>
-        <arg name="fcu_url" default="udp://:14541@localhost:14581"/>
-  			<!-- Mavros -->
-        <include file="$(find mavros)/launch/px4.launch">
-            <arg name="fcu_url" value="$(arg fcu_url)"/>
-            <arg name="gcs_url" value=""/>
-            <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
-            <arg name="tgt_component" value="1"/>
-        </include>
-    </group>
 
-		<!--node pkg="offb_py" type="main_2_drone.py" name="main_2_drone_node" output="screen" /-->
+		<!-- programs>
+		<node pkg="offb_py" type="command_main0.py" name="command_main0_node" output="screen" />
+		<node pkg="helmet_detection" type="sensor_main0.py" name="sensor_main0_node" output="screen" />
+		<node pkg="offb_py" type="main_1_drone.py" name="main_1_drone_node" output="screen" />
+< end comment out -->
+
 </launch>
 
 

@@ -25,7 +25,7 @@ class command_pub(object):
     def key_cmd(self):
         while not self.ctrl_c:
             num = input("Enter number for command: ")
-            self.cmd.data = [num, 0, 0]
+            self.cmd.data = [num, 0, 0, 1]
             if num == -1:
                 break
             elif num == 1:
@@ -33,10 +33,11 @@ class command_pub(object):
             elif num == 3:
                 self.cmd.data[1] = -1
             elif num == 4:
-                self.cmd.data[1] = 1
+                self.cmd.data[2] = 0.707
+                self.cmd.data[3] = 0.707
             elif num == 5:
-                self.cmd.data[1] = 1
-                self.cmd.data[2] = 1
+                self.cmd.data[2] = -0.707
+                self.cmd.data[3] = 0.707
 
             #publish cmd
             self.command_pub.publish(self.cmd)

@@ -1,5 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-		<!-- main program creates 2 multi_drones -->
-		<node pkg="offb_py" type="main.py" name="main_node" output="screen" />
-</launch>

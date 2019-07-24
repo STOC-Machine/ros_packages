@@ -5,7 +5,7 @@ import threading
 import rospy
 
 if __name__ == '__main__':
-    rospy.init_node('main_node')
+    rospy.init_node('main_2_drone_node')
     print "initialized main_node"
     
 

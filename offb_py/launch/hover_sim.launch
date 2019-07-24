@@ -10,6 +10,6 @@
 	</include>
 
 	<!-- python node -->
-	<node pkg="offb_py" type="hover_test.py" name="hover_test_node" output="screen" /> 
+	<node pkg="offb_py" type="multi_drone.py" name="multi_drone_node" output="screen" /> 
 
 </launch>

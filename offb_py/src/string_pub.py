@@ -2,11 +2,18 @@
 
 import rospy
 from std_msgs.msg import Float32MultiArray
+import socket
 
-class command_pub(object):
+class string_pub(object):
     def __init__(self, num):
         #topics
-        self.command_pub = rospy.Publisher('uav' + str(num) + '/mavros/command',
+        self.command_pub_0 = rospy.Publisher('uav0/mavros/command', 
+                Float32MultiArray, queue_size=1)
+        self.command_pub_1 = rospy.Publisher('uav1/mavros/command', 
+                Float32MultiArray, queue_size=1)
+        self.command_pub_2 = rospy.Publisher('uav2/mavros/command', 
+                Float32MultiArray, queue_size=1)
+        self.command_pub_3 = rospy.Publisher('uav3/mavros/command', 
                 Float32MultiArray, queue_size=1)
 
         #variables

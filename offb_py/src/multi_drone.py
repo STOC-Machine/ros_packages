@@ -54,7 +54,7 @@ class multi_drone(object):
         self.state = state_msg
 
     def cmd_cb(self, msg):
-        if msg.data[0] == 6:
+        if msg.data[0] == 1:
             self.helmet_flag = True
         else:
             self.helmet_flag = False
@@ -64,8 +64,9 @@ class multi_drone(object):
                 self.pose_obj.pose.orientation.w = msg.data[3]
 
     def sensor_cb(self, sensor_msg):
-        if sensor_msg.data[3] < 30:
+        if sensor_msg.data[3] < 100:
             self.object_flag = True
+            print "Obstacle Detected!!!"
         else:
             self.object_flag = False
             if self.helmet_flag:
@@ -83,33 +84,32 @@ class multi_drone(object):
         self.pose_obj.pose.position.z = z
 
     def fly(self):
+        #wait for vehicle to connect
         self.wait_for_connection()
-        self.set_pose(0,0,2)
-        for _iterations in range(100):
-            self.pose_pub.publish(self.pose_obj)
+
+        #start publishing position
+        position_thread = threading.Thread(target=self.publish_pose)
+        position_thread.start()
+
+        #wait for a few messages to be sent
+        for _ in range(60):
             self.rate.sleep()
 
-        #set up service messages for arming and offb mode
-        self.offb_srv_msg.custom_mode = "OFFBOARD"
-        self.arming_srv_msg.value = True
+        #change mode to offboard mode
+        #input("set to offboard?")
+        self.set_mode("OFFBOARD")
 
-        #while loop for arming, offb mode, and publish position
+        #wait to arm
+        for _ in range(60):
+            self.rate.sleep()
+        
+        #arm and take off
+        #input("arm?")
+        self.set_pose(0,0,2)
+        self.arm_drone(True)
+
+        #wait for close
         while not self.ctrl_c:
-            #set to offb mode
-            if self.state.mode != "OFFBOARD" and (rospy.Time.now() - self.last_time > rospy.Duration(5.0) ):
-                if self.mode_client.call(self.offb_srv_msg).mode_sent:
-                    rospy.loginfo("set to offboard mode!")
-                self.last_time = rospy.Time.now()
-            else:
-                if not self.state.armed and (rospy.Time.now() - self.last_time > rospy.Duration(5.0) ):
-                    if self.arming_client.call(self.arming_srv_msg).success:
-                        rospy.loginfo("vehicle armed!!")
-                    self.last_time = rospy.Time.now()
-
-            #publish position
-            self.pose_pub.publish(self.pose_obj)
-
-            #sleep
             self.rate.sleep()
 
 
@@ -159,7 +159,7 @@ class multi_drone(object):
                 rospy.loginfo(return_msg)
                 break
             for _ in range(40):
-                self.rate.sleep(40)
+                self.rate.sleep()
 
     def publish_pose(self):
         while not self.ctrl_c:
@@ -174,7 +174,7 @@ if __name__ == "__main__":
     
     drone0 = multi_drone(0)
 
-    drone0.flight_commander()
+    drone0.fly()
 
 """
     t0.start()

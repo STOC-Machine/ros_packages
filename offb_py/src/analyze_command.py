@@ -19,13 +19,18 @@ def analyze_command(command):
     
     # TODO: Catch error
     try:
-        # start = words.find("Drone")
         index = 0
-        if words[index] in DroneName:
+        
+        if words[index] in DroneName: 
             no_drone = int(DroneName[ words[index] ])
-        # else:
-        #     for name in DroneName
-        index+=1
+            index+=1
+        else: # in case of redfly, etc.
+            for name in DroneName:
+                appearance = words[0].find(name)
+                if appearance == 0:
+                    no_drone = int(DroneName[ name ])
+                    words[0] = words[0][len(name):]
+                    # print("New", words[0])
         action = Action[ words[index]]
 
         if words[index] == "fly":

@@ -102,24 +102,24 @@ def turn_right(radians):
 rospy.init_node('test_drone_node')
 
 # state subscriber
-state_sub = rospy.Subscriber('/mavros/state', State, state_cb)
+state_sub = rospy.Subscriber('/uav0/mavros/state', State, state_cb)
 state_msg = State()
 
 # local position subscriber
-pose_sub = rospy.Subscriber('/mavros/local_position/pose', PoseStamped, pose_cb)
+pose_sub = rospy.Subscriber('/uav0/mavros/local_position/pose', PoseStamped, pose_cb)
 pose_msg = PoseStamped()
 
 # velocity publisher
-velocity_pub = rospy.Publisher('/mavros/setpoint_velocity/cmd_vel_unstamped', 
+velocity_pub = rospy.Publisher('/uav0/mavros/setpoint_velocity/cmd_vel_unstamped', 
         Twist, queue_size=1)
 velocity_msg = Twist()
 
 # set_mode service
-set_mode_srv = rospy.ServiceProxy('/mavros/set_mode', SetMode)
+set_mode_srv = rospy.ServiceProxy('/uav0/mavros/set_mode', SetMode)
 set_mode_msg = SetModeRequest()
 
 # arm service
-arming_srv = rospy.ServiceProxy('/mavros/cmd/arming', CommandBool)
+arming_srv = rospy.ServiceProxy('/uav0/mavros/cmd/arming', CommandBool)
 arming_msg = CommandBoolRequest()
 
 # rest of initialization

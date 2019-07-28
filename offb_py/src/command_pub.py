@@ -1,16 +1,15 @@
 #! /usr/bin/env python
 
 import rospy
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Int32MultiArray
 
 class command_pub(object):
     def __init__(self, num):
         #topics
-        self.command_pub = rospy.Publisher('uav' + str(num) + '/mavros/command',
-                Float32MultiArray, queue_size=1)
+        self.command_pub = rospy.Publisher('uav' + str(num) + '/mavros/command', Int32MultiArray, queue_size=1)
 
         #variables
-        self.cmd = Float32MultiArray()
+        self.cmd = Int32MultiArray()
         self.ctrl_c = False
 
         #shutdown
@@ -24,20 +23,9 @@ class command_pub(object):
 
     def key_cmd(self):
         while not self.ctrl_c:
-            num = input("Cmd (1-helmet 4-forward 5-back 6-right 7-left): ")
-            self.cmd.data = [num, 0, 0, 1]
-            if num == -1:
-                break
-            elif num == 4:
-                self.cmd.data[1] = 1
-            elif num == 5:
-                self.cmd.data[1] = -1
-            elif num == 6:
-                self.cmd.data[2] = 0.707
-                self.cmd.data[3] = 0.707
-            elif num == 7:
-                self.cmd.data[2] = -0.707
-                self.cmd.data[3] = 0.707
+            num = input("Cmd (0-fly 1-turn 2-stop 3-save 4-special 5-land): ")
+            direction = input("direction: 0-forward 1-back 2-up 3-down 4-right 5-left")
+            self.cmd.data = [num, direction]
 
             #publish cmd
             self.command_pub.publish(self.cmd)

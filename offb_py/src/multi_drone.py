@@ -4,11 +4,19 @@ import rospy
 from mavros_msgs.srv import CommandBool, CommandBoolRequest
 from mavros_msgs.srv import SetMode, SetModeRequest
 from mavros_msgs.msg import State
-from geometry_msgs.msg import PoseStamped
-from std_msgs.msg import Float32MultiArray
+from geometry_msgs.msg import PoseStamped, Twist
+from std_msgs.msg import Float32MultiArray, Int32MultiArray
 import threading
 
+
+
+##################################################
+########        multi_drone class       ##########
+##################################################
+
 class multi_drone(object):
+
+    ########        initialization function     ########
     def __init__(self, num):
         if num < 0 or num > 80:
             print "Error: initializing ", num, " drone. Bad number"
@@ -17,19 +25,22 @@ class multi_drone(object):
         #topics
         self.state_sub = rospy.Subscriber('/uav' + str(num) + '/mavros/state', 
                 State, self.state_cb)
-        self.pose_pub = rospy.Publisher('/uav' + str(num) + 
-                '/mavros/setpoint_position/local', PoseStamped, queue_size=1)
+        self.position_sub = rospy.Subscriber('/uav' + str(num) + 
+                '/mavros/local_position/pose', PoseStamped, self.pose_cb)
+        self.velocity_pub = rospy.Publisher('/uav' + str(num) + 
+                '/mavros/setpoint_velocity/cmd_vel_unstamped', Twist, queue_size=1)
         self.arming_client = rospy.ServiceProxy('/uav' + str(num) + 
                 '/mavros/cmd/arming', CommandBool)
         self.mode_client = rospy.ServiceProxy('/uav' + str(num) + 
                 '/mavros/set_mode', SetMode)
         self.command_sub = rospy.Subscriber('/uav' + str(num) + '/mavros/command',
-                Float32MultiArray, self.cmd_cb)
+                Int32MultiArray, self.cmd_cb)
         self.sensor_sub = rospy.Subscriber('/uav' + str(num) + '/mavros/sensor',
                 Float32MultiArray, self.sensor_cb)
 
         #variables
-        self.pose_obj = PoseStamped()
+        self.velocity_obj = Twist()
+        self.position_obj = PoseStamped()
         self.offb_srv_msg = SetModeRequest()
         self.arming_srv_msg = CommandBoolRequest()
         self.state = State()
@@ -44,24 +55,39 @@ class multi_drone(object):
         rospy.on_shutdown(self.shutdownhook)
 
     def shutdownhook(self):
-        self.set_pose(0,0,0)
-        for _iter in range(80):
-            self.pose_pub.publish(self.pose_obj)
-            self.rate.sleep()
         self.ctrl_c = True
 
     def state_cb(self, state_msg):
         self.state = state_msg
 
+    def pose_cb(self, msg):
+        self.position_obj = msg
+
     def cmd_cb(self, msg):
-        if msg.data[0] == 1:
+        action = msg.data[0]
+        direction = msg.data[1]
+        if action == 3:
             self.helmet_flag = True
         else:
             self.helmet_flag = False
-            if not self.object_flag:
-                self.pose_obj.pose.position.x += msg.data[1]
-                self.pose_obj.pose.orientation.z = msg.data[2]
-                self.pose_obj.pose.orientation.w = msg.data[3]
+            if action == 0:
+                if direction == 0:
+                    self.forward(1)
+                elif direction == 1:
+                    self.back(1)
+                elif direction == 2:
+                    self.up(1)
+                elif direction == 3:
+                    self.down(1)
+            elif action == 1:
+                if direction == 0:
+                    self.turn_ccw(1.55)
+                elif direction == 1:
+                    self.turn_cw(1.55)
+            elif action == 2:
+                self.stop()
+            elif action == 5:
+                self.set_mode("AUTO.LAND")
 
     def sensor_cb(self, sensor_msg):
         if sensor_msg.data[3] < 100:
@@ -70,50 +96,45 @@ class multi_drone(object):
         else:
             self.object_flag = False
             if self.helmet_flag:
-                self.pose_obj.pose.position.x += sensor_msg.data[0]
-                self.pose_obj.pose.position.y += sensor_msg.data[0]
+                # TODO
+                num_test = 1
 
 
     def wait_for_connection(self):
         while not self.ctrl_c and not self.state.connected:
             self.rate.sleep()
 
-    def set_pose(self, x, y, z):
-        self.pose_obj.pose.position.x = x
-        self.pose_obj.pose.position.y = y
-        self.pose_obj.pose.position.z = z
+    def wait(self, time_sec):
+        for _ in range(int(time_sec * 20)):
+            self.rate.sleep()
 
     def fly(self):
         #wait for vehicle to connect
         self.wait_for_connection()
 
         #start publishing position
-        position_thread = threading.Thread(target=self.publish_pose)
-        position_thread.start()
+        velocity_thread = threading.Thread(target=self.publish_velocity)
+        velocity_thread.daemon = True
+        velocity_thread.start()
 
         #wait for a few messages to be sent
-        for _ in range(60):
-            self.rate.sleep()
+        self.wait(1)
 
         #change mode to offboard mode
-        #input("set to offboard?")
+        input("set to offboard?")
         self.set_mode("OFFBOARD")
-
-        #wait to arm
-        for _ in range(60):
-            self.rate.sleep()
+        self.wait(1)
         
         #arm and take off
-        #input("arm?")
-        self.set_pose(0,0,2)
+        input("arm?")
         self.arm_drone(True)
+        self.takeoff()
 
         #wait for close
-        while not self.ctrl_c:
-            self.rate.sleep()
+        rospy.spin()
 
 
-    def flight_commander(self):
+    """def flight_commander(self):
         position_thread = threading.Thread(target=self.publish_pose)
         position_thread.start()
         while not self.ctrl_c:
@@ -140,16 +161,16 @@ class multi_drone(object):
                 break
 
         self.set_mode("AUTO.LAND")
-        self.shutdownhook()
+        self.shutdownhook()"""
 
     def set_mode(self, mode_name):
         self.offb_srv_msg.custom_mode = mode_name
         while not self.ctrl_c:
             if self.mode_client.call(self.offb_srv_msg).mode_sent:
-                rospy.loginfo("set to offboard mode!")
+                return_msg = "set to " + mode_name + " mode!"
+                rospy.loginfo(return_msg)
                 break
-            for _ in range(40):
-                self.rate.sleep()
+            self.wait(2)
 
     def arm_drone(self, arm_bool):
         self.arming_srv_msg.value = arm_bool
@@ -158,16 +179,94 @@ class multi_drone(object):
                 return_msg = "armed: " + str(arm_bool)
                 rospy.loginfo(return_msg)
                 break
-            for _ in range(40):
-                self.rate.sleep()
+            self.wait(2)
 
-    def publish_pose(self):
+    def publish_velocity(self):
         while not self.ctrl_c:
-            self.pose_pub.publish(self.pose_obj)
+            self.velocity_pub.publish(self.velocity_obj)
             self.rate.sleep()
 
 
-#run code if this is the main file
+    ########        control functions       ########
+
+    def forward(self, distance):
+        speed = 0.75
+        qz = self.position_obj.pose.orientation.z
+        qw = self.position_obj.pose.orientation.w
+        x_speed = speed * ((qw*qw) - (qz*qz)) 
+        y_speed = speed * 2 * qz * qw
+        self.velocity_obj.linear.x = x_speed
+        self.velocity_obj.linear.y = y_speed
+        self.wait( (distance*1.0) / speed )
+        self.velocity_obj.linear.x = 0.0
+        self.velocity_obj.linear.y = 0.0
+
+    def back(self, distance):
+        speed = 0.75
+        qz = self.position_obj.pose.orientation.z
+        qw = self.position_obj.pose.orientation.w
+        x_speed = (-1.0) * speed * ((qw*qw) - (qz*qz)) 
+        y_speed = (-1.0) * speed * 2 * qz * qw
+        self.velocity_obj.linear.x = x_speed
+        self.velocity_obj.linear.y = y_speed
+        self.wait( (distance*1.0) / speed )
+        self.velocity_obj.linear.x = 0.0
+        self.velocity_obj.linear.y = 0.0
+
+    def turn_cw(self, radians):
+        ang_speed = 1.0
+        self.velocity_obj.linear.x = 0.0
+        self.velocity_obj.linear.y = 0.0
+        self.velocity_obj.angular.z = (-1.0) * ang_speed
+        self.wait( (radians * 1.0) / (ang_speed) )
+        self.velocity_obj.angular.z = 0.0
+
+    def turn_ccw(self, radians):
+        ang_speed = 1.0
+        self.velocity_obj.linear.x = 0.0
+        self.velocity_obj.linear.y = 0.0
+        self.velocity_obj.angular.z = ang_speed
+        self.wait( (radians * 1.0) / (ang_speed) )
+        self.velocity_obj.angular.z = 0.0
+
+    def up(self, distance):
+        speed = 0.5
+        self.velocity_obj.linear.z = speed
+        self.wait( (distance*1.0) / speed )
+        self.velocity_obj.linear.z = 0.0
+
+    def down(self, distance):
+        speed = 0.5
+        self.velocity_obj.linear.z = (-1.0) * speed
+        self.wait( (distance*1.0) / speed )
+        self.velocity_obj.linear.z = 0.0
+
+    def stop(self):
+        for _ in range(5):
+            self.velocity_obj.linear.x = 0.0
+            self.velocity_obj.linear.y = 0.0
+            self.velocity_obj.linear.z = 0.0
+            self.velocity_obj.angular.x = 0.0
+            self.velocity_obj.angular.y = 0.0
+            self.velocity_obj.angular.z = 0.0
+            self.rate.sleep()
+
+    def takeoff(self):
+        self.velocity_obj.linear.z = 1.0
+        while not self.ctrl_c and self.position_obj.pose.position.z <= 2.0:
+            self.rate.sleep()
+        self.velocity_obj.linear.z = 0.0
+
+
+
+
+
+
+
+############################################
+########         main program       ########
+############################################
+
 if __name__ == "__main__":
     rospy.init_node('multi_drone_node')
     rospy.loginfo("initialized multi_drone_node")

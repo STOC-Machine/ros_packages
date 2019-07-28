@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+import rospy
 import csv 
 
 # csv file name 
@@ -54,19 +56,25 @@ def analyze_command(command):
         # TODO: Consider velocity
     except KeyError:
         print("Invalid command")
-        return (0,0,0)
+        return (-1,0,0)
     except IndexError:
         print("Invalid command")
-        return (0,0,0)
+        return (-1,0,0)
 
 import socket
+from cmd_pub import cmd_pub
 
 def start_listen():
+    # create cmd_pub object
+    command_publisher = cmd_pub()
+    # create socket connection
     serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serv.bind(('0.0.0.0', Port))
     serv.listen(5)
+    print "listening"
     while True:
         conn, addr = serv.accept()
+        print "connected"
         from_client = ''
         while True:
             data = conn.recv(4096)
@@ -74,8 +82,10 @@ def start_listen():
             # from_client += data
             message = data.decode("utf-8")[4:]
             print("Receive message:")
+            print(data)
             print(data.decode("utf-8")[4:] )
-            print("Convert to: ", analyze_command(message))
+            #print("Convert to: ", analyze_command(message))
+            command_publisher.publish(analyze_command(message))
         conn.close()
 
 # start_listen()
@@ -92,12 +102,26 @@ def start_listen():
 #     # sock.close()
 
 # send_message()
-analyze_command("blue fly forward")
-analyze_command("red save me")
-analyze_command("orange stop")
-analyze_command("bluefly up")
-analyze_command("redfly to me")
-analyze_command("blue fly")
+#analyze_command("blue fly forward")
+#analyze_command("red save me")
+#analyze_command("orange stop")
+#analyze_command("bluefly up")
+#analyze_command("redfly to me")
+#analyze_command("blue fly")
+
+
+
+########        main program        ########
+if __name__ == "__main__":
+    rospy.init_node('analyze_command_node')
+
+    # run loop to listen for commands
+    start_listen()
+
+    # test cmd_pub
+    #command_publisher = cmd_pub()
+    #command_publisher.publish(analyze_command("orange stop"))
+    #command_publisher.publish((0,1,1))
 
 
 

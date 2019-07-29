@@ -116,9 +116,9 @@ class multi_drone(object):
         self.wait_for_connection()
 
         #start publishing position
-        velocity_thread = threading.Thread(target=self.publish_velocity)
-        velocity_thread.daemon = True
-        velocity_thread.start()
+        position_thread = threading.Thread(target=self.publish_position)
+        position_thread.daemon = True
+        position_thread.start()
 
         #wait for a few messages to be sent
         self.wait(1)
@@ -132,6 +132,10 @@ class multi_drone(object):
         input("arm?")
         self.arm_drone(True)
         self.takeoff()
+
+        # forward
+        #input("forward?")
+        #self.forward(1)
 
         #wait for close
         rospy.spin()
@@ -189,15 +193,20 @@ class multi_drone(object):
             self.velocity_pub.publish(self.velocity_obj)
             self.rate.sleep()
 
+    def publish_position(self):
+        while not self.ctrl_c:
+            self.position_pub.publish(self.position_send_obj)
+            self.rate.sleep()
 
     ########        control functions       ########
 
     def forward(self, distance):
-        speed = 0.75
+        self.position_send_obj = self.position_obj
+
         qz = self.position_obj.pose.orientation.z
         qw = self.position_obj.pose.orientation.w
-        x_speed = speed * ((qw*qw) - (qz*qz)) 
-        y_speed = speed * 2 * qz * qw
+        x_distance = distance * ((qw*qw) - (qz*qz)) 
+        y_distance = distance * 2 * qz * qw
         self.velocity_obj.linear.x = x_speed
         self.velocity_obj.linear.y = y_speed
         self.wait( (distance*1.0) / speed )
@@ -255,15 +264,8 @@ class multi_drone(object):
             self.rate.sleep()
 
     def takeoff(self):
-        self.velocity_obj.linear.z = 1.0
-        while not self.ctrl_c and self.position_obj.pose.position.z <= 3.0:
-            self.rate.sleep()
         self.position_send_obj = self.position_obj
-        self.velocity_obj.linear.z = 0.0
-        for _ in range(10):
-            self.position_pub.publish(self.position_send_obj)
-            self.rate.sleep()
-
+        self.position_send_obj.pose.position.z = 2
 
 
 

@@ -7,6 +7,7 @@ from mavros_msgs.msg import State
 from geometry_msgs.msg import PoseStamped, Twist
 from std_msgs.msg import Float32MultiArray, Int32MultiArray
 import threading
+import math
 
 
 
@@ -75,9 +76,9 @@ class multi_drone(object):
             self.helmet_flag = False
             if action == 0:
                 if direction == 0:
-                    self.forward(1)
+                    self.forward(0.5)
                 elif direction == 1:
-                    self.back(1)
+                    self.forward(-0.5)
                 elif direction == 2:
                     self.up(1)
                 elif direction == 3:
@@ -136,6 +137,10 @@ class multi_drone(object):
         # forward
         #input("forward?")
         #self.forward(1)
+
+        # land
+        input("land?")
+        self.set_mode("AUTO.LAND")
 
         #wait for close
         rospy.spin()
@@ -202,44 +207,22 @@ class multi_drone(object):
 
     def forward(self, distance):
         self.position_send_obj = self.position_obj
-
+        # calculate x and y distance
         qz = self.position_obj.pose.orientation.z
         qw = self.position_obj.pose.orientation.w
         x_distance = distance * ((qw*qw) - (qz*qz)) 
         y_distance = distance * 2 * qz * qw
-        self.velocity_obj.linear.x = x_speed
-        self.velocity_obj.linear.y = y_speed
-        self.wait( (distance*1.0) / speed )
-        self.velocity_obj.linear.x = 0.0
-        self.velocity_obj.linear.y = 0.0
+        # add x and y distance
+        self.position_send_obj.pose.position.x += x_distance
+        self.position_send_obj.pose.position.y += y_distance
 
-    def back(self, distance):
-        speed = 0.75
-        qz = self.position_obj.pose.orientation.z
-        qw = self.position_obj.pose.orientation.w
-        x_speed = (-1.0) * speed * ((qw*qw) - (qz*qz)) 
-        y_speed = (-1.0) * speed * 2 * qz * qw
-        self.velocity_obj.linear.x = x_speed
-        self.velocity_obj.linear.y = y_speed
-        self.wait( (distance*1.0) / speed )
-        self.velocity_obj.linear.x = 0.0
-        self.velocity_obj.linear.y = 0.0
-
-    def turn_cw(self, radians):
-        ang_speed = 1.0
-        self.velocity_obj.linear.x = 0.0
-        self.velocity_obj.linear.y = 0.0
-        self.velocity_obj.angular.z = (-1.0) * ang_speed
-        self.wait( (radians * 1.0) / (ang_speed) )
-        self.velocity_obj.angular.z = 0.0
-
-    def turn_ccw(self, radians):
-        ang_speed = 1.0
-        self.velocity_obj.linear.x = 0.0
-        self.velocity_obj.linear.y = 0.0
-        self.velocity_obj.angular.z = ang_speed
-        self.wait( (radians * 1.0) / (ang_speed) )
-        self.velocity_obj.angular.z = 0.0
+    def turn(self, radians):
+        self.position_send_obj = self.position_obj
+        # calculate quarternion
+        new_rad = 2* math.asin(self.position_obj.pose.orientation.z)
+        radians += new_rad
+        self.position_send_obj.pose.orientation.z = math.sin(radians)
+        self.position_senf_obj.pose.orientation.w = math.cos(radians)
 
     def up(self, distance):
         speed = 0.5
@@ -266,7 +249,7 @@ class multi_drone(object):
     def takeoff(self):
         self.position_send_obj = self.position_obj
         for _ in range(10):
-            self.position_send_obj.pose.position.z = 3
+            self.position_send_obj.pose.position.z = 1.2
             self.rate.sleep()
 
 

@@ -29,6 +29,8 @@ class multi_drone(object):
                 '/mavros/local_position/pose', PoseStamped, self.pose_cb)
         self.velocity_pub = rospy.Publisher('/uav' + str(num) + 
                 '/mavros/setpoint_velocity/cmd_vel_unstamped', Twist, queue_size=1)
+        self.position_pub = rospy.Publisher('uav' + str(num) +
+                '/mavros/setpoint_position/local', PoseStamped, queue_size=1)
         self.arming_client = rospy.ServiceProxy('/uav' + str(num) + 
                 '/mavros/cmd/arming', CommandBool)
         self.mode_client = rospy.ServiceProxy('/uav' + str(num) + 
@@ -41,6 +43,7 @@ class multi_drone(object):
         #variables
         self.velocity_obj = Twist()
         self.position_obj = PoseStamped()
+        self.position_send_obj = PoseStamped()
         self.offb_srv_msg = SetModeRequest()
         self.arming_srv_msg = CommandBoolRequest()
         self.state = State()
@@ -253,9 +256,13 @@ class multi_drone(object):
 
     def takeoff(self):
         self.velocity_obj.linear.z = 1.0
-        while not self.ctrl_c and self.position_obj.pose.position.z <= 2.0:
+        while not self.ctrl_c and self.position_obj.pose.position.z <= 3.0:
             self.rate.sleep()
+        self.position_send_obj = self.position_obj
         self.velocity_obj.linear.z = 0.0
+        for _ in range(10):
+            self.position_pub.publish(self.position_send_obj)
+            self.rate.sleep()
 
 
 

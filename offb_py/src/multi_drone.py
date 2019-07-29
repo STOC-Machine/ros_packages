@@ -265,7 +265,9 @@ class multi_drone(object):
 
     def takeoff(self):
         self.position_send_obj = self.position_obj
-        self.position_send_obj.pose.position.z = 2
+        for _ in range(10):
+            self.position_send_obj.pose.position.z = 3
+            self.rate.sleep()
 
 
 

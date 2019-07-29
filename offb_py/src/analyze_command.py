@@ -77,15 +77,29 @@ def start_listen():
         print "connected"
         from_client = ''
         while True:
+            #print "d"
             data = conn.recv(4096)
             if not data: continue
             # from_client += data
-            message = data.decode("utf-8")[4:]
+            #message = data.decode("utf-8")
+            message = list(data[5:-1].split(", "))
             print("Receive message:")
             print(data)
-            print(data.decode("utf-8")[4:] )
-            #print("Convert to: ", analyze_command(message))
-            command_publisher.publish(analyze_command(message))
+            print(message )
+            print(type(message))
+            print(type(data))
+            for command in message:
+                command_tmp = analyze_command(command)
+                #print(command, "convert to: ", command_tmp)
+                if command_tmp != (-1,0,0):
+                    print("Valid command")
+                    command_publisher.publish(command_tmp)
+                    break
+            #print "a"
+            #command_publisher.publish(analyze_command(message))
+            #print "b"
+            data = "" 
+        #print "c"
         conn.close()
 
 # start_listen()

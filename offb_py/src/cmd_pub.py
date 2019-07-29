@@ -51,7 +51,6 @@ class cmd_pub(object):
             self.command_pub_3.publish(self.cmd)
 
 
-
 if __name__ == '__main__':
     rospy.init_node('cmd_pub_node')
 

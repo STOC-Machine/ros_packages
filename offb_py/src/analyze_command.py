@@ -6,7 +6,8 @@ import csv
 import pathlib
 
 DroneName = {'red': 0, 'blue': 1, 'purple': 2, 'orange': 3}
-Action = {"fly": 0, "turn": 1, "stop": 2, "save": 3, "screenshot": 4, "special": 7}
+DroneAction = {"fly": 0, "turn": 1, "stop": 2, "save": 3, "screenshot": 4, "special": 7}
+# Action = {"agree": 0}
 MoveDirection = {"forward": 0, "backward": 1, "back": 1, "up": 2, "down": 3, 
 "right": 4, "left": 5, "to": 6, "north":7, "south": 8, "east": 9, "west": 10}
 # 3DTurn = {"x y": 0, "x z": 1, "y z": 2}
@@ -16,6 +17,11 @@ TurnDirection = {"counter-clockwise": 0, "counter": 0, "clockwise": 1, "back": 2
 Port = 12459
 
 def analyze_command(command):
+    # Convert command into format:
+    #      (drone_id, 
+    #          action (for drone or for computer to process image,
+    #          direction_of_drone_movement)
+
     # Find the drone info
     words = command.split()
     words = [word.lower() for word in words]
@@ -23,6 +29,8 @@ def analyze_command(command):
     try:
         index = 0
         
+        if words[0] == "agree": # Agree with the image received from screenshot
+            return (-1,10,0)
         if words[index] in DroneName: 
             no_drone = int(DroneName[ words[index] ])
             index+=1
@@ -33,7 +41,7 @@ def analyze_command(command):
                     no_drone = int(DroneName[ name ])
                     words[0] = words[0][len(name):]
                     # print("New", words[0])
-        action = Action[ words[index]]
+        action = DroneAction[ words[index]]
 
         if words[index] == "fly":
             direction = MoveDirection[ words[index+1]]

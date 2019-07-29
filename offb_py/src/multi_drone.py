@@ -256,7 +256,7 @@ class multi_drone(object):
 
     def takeoff(self):
         self.velocity_obj.linear.z = 1.0
-        while not self.ctrl_c and self.position_obj.pose.position.z <= 3.0:
+        while not self.ctrl_c and self.position_obj.pose.position.z <= 1.5:
             self.rate.sleep()
         self.position_send_obj = self.position_obj
         self.velocity_obj.linear.z = 0.0

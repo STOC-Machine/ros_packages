@@ -79,7 +79,7 @@ def start_listen():
         while True:
             #print "d"
             data = conn.recv(4096)
-            if not data: continue
+            if not data: break
             # from_client += data
             #message = data.decode("utf-8")
             message = list(data[5:-1].split(", "))
@@ -99,7 +99,7 @@ def start_listen():
             #command_publisher.publish(analyze_command(message))
             #print "b"
             data = "" 
-        #print "c"
+        print "disconnected"
         conn.close()
 
 # start_listen()

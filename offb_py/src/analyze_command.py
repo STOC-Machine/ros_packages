@@ -5,8 +5,8 @@ import csv
 # 0: outcome, 5: batter, 7: inning, 10: top, which team is playing
 import pathlib
 
-DroneName = {'red': 0, 'blue': 1, 'purple': 2, 'orange': 3}
-Action = {"fly": 0, "turn": 1, "stop": 2, "save": 3, "special": 4}
+DroneName = {'red': 0, 'blue': 1, 'purple': 2, 'orange': 3} 
+Action = {"fly": 0, "turn": 1, "stop": 2, "save": 3, "special": 4} # balance, screenshot, position of images, turn front
 MoveDirection = {"forward": 0, "backward": 1, "up": 2, "down": 3, "right": 4, "left": 5, "to": 6}
 # 3DTurn = {"x y": 0, "x z": 1, "y z": 2}
 TurnDirection = {"counter": 0, "clockwise": 1}

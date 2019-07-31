@@ -54,6 +54,8 @@ class multi_drone(object):
         self.helmet_flag = False
         self.object_flag = False
         self.ctrl_c = False
+        self.obstacle = False
+        self.height = 2.5
 
         #shutdown
         rospy.on_shutdown(self.shutdownhook)
@@ -76,32 +78,37 @@ class multi_drone(object):
             self.helmet_flag = False
             if action == 0:
                 if direction == 0:
-                    self.forward(0.5)
+                    self.forward(1.0)
                 elif direction == 1:
-                    self.forward(-0.5)
+                    self.forward(-1.0)
                 elif direction == 2:
-                    self.up(1)
+                    self.up(0.5)
                 elif direction == 3:
-                    self.down(1)
+                    self.up(-0.5)
             elif action == 1:
                 if direction == 0:
-                    self.turn_ccw(1.55)
+                    self.turn_cw()
                 elif direction == 1:
-                    self.turn_cw(1.55)
+                    self.turn_ccw()
             elif action == 2:
                 self.stop()
             elif action == 5:
                 self.set_mode("AUTO.LAND")
 
     def sensor_cb(self, sensor_msg):
-        if sensor_msg.data[3] < 100:
+        if sensor_msg.data[3] < 50 and self.obstacle:
             self.object_flag = True
+            self.forward(-1)
             print "Obstacle Detected!!!"
         else:
             self.object_flag = False
             if self.helmet_flag:
-                # TODO
-                num_test = 1
+                print "helmet x: ", sensor_msg.data[1]
+                if sensor_msg.data[1] > 1:
+                    xh = sensor_msg.data[1] - 100
+                    yh = sensor_msg.data[2] - 50
+                    self.right(0.02 * xh)
+                    self.forward(-0.03 * yh)
 
 
     def wait_for_connection(self):
@@ -109,8 +116,10 @@ class multi_drone(object):
             self.rate.sleep()
 
     def wait(self, time_sec):
+        print "wait start"
         for _ in range(int(time_sec * 20)):
             self.rate.sleep()
+        print "wait end"
 
     def fly(self):
         #wait for vehicle to connect
@@ -134,8 +143,12 @@ class multi_drone(object):
         self.arm_drone(True)
         self.takeoff()
 
-        # forward
-        #input("forward?")
+        # test helmet detection
+        self.wait(5)
+        self.obstacle = True
+        #self.helmet_flag = True
+        #self.right(1)
+        #self.wait(2)
         #self.forward(1)
 
         # land
@@ -206,7 +219,10 @@ class multi_drone(object):
     ########        control functions       ########
 
     def forward(self, distance):
-        self.position_send_obj = self.position_obj
+        print "forward start"
+        #self.position_send_obj = self.position_obj
+        self.position_send_obj.pose.position.x = self.position_obj.pose.position.x
+        self.position_send_obj.pose.position.y = self.position_obj.pose.position.y
         # calculate x and y distance
         qz = self.position_obj.pose.orientation.z
         qw = self.position_obj.pose.orientation.w
@@ -215,41 +231,113 @@ class multi_drone(object):
         # add x and y distance
         self.position_send_obj.pose.position.x += x_distance
         self.position_send_obj.pose.position.y += y_distance
+        self.position_send_obj.pose.position.z = self.height
+        print "forward end"
 
-    def turn(self, radians):
-        self.position_send_obj = self.position_obj
+    def right(self, distance):
+        # self.position_send_obj = self.position_obj
+        # calculate x and y distance
+        self.position_send_obj.pose.position.x = self.position_obj.pose.position.x
+        self.position_send_obj.pose.position.y = self.position_obj.pose.position.y
+        qz = self.position_obj.pose.orientation.z
+        qw = self.position_obj.pose.orientation.w
+        x_distance = distance * (2 * qw * qz) 
+        y_distance = (-1.0) * distance * ((qw * qw) - (qz * qz))
+        # add x and y distance
+        self.position_send_obj.pose.position.x += x_distance
+        self.position_send_obj.pose.position.y += y_distance
+
+    def turn_ccw(self):
+        #self.position_send_obj = self.position_obj
+        self.position_send_obj.pose.position.x = self.position_obj.pose.position.x
+        self.position_send_obj.pose.position.y = self.position_obj.pose.position.y
+
         # calculate quarternion
-        new_rad = 2* math.asin(self.position_obj.pose.orientation.z)
-        radians += new_rad
-        self.position_send_obj.pose.orientation.z = math.sin(radians)
-        self.position_senf_obj.pose.orientation.w = math.cos(radians)
+        qz = self.position_obj.pose.orientation.z
+        qw = self.position_obj.pose.orientation.w
+        if qz >= 0.0:
+            new_rad = 2 * math.acos(qw)
+        elif qz <= 0.0:
+            new_rad = -2 * math.acos(qw)
+
+        if new_rad < 0.0:
+            new_rad += 6.28
+
+        # set rotation angle
+        if (new_rad >= -0.8 and new_rad <= 0.8) or (new_rad >= 5.4 and new_rad <= 7.1) or (new_rad >= -5.4 and new_rad <= -7.1):
+            #forward to left
+            self.position_send_obj.pose.orientation.z = 0.707
+            self.position_send_obj.pose.orientation.w = 0.707
+        elif (new_rad >= 0.7 and new_rad <= 2.4) or (new_rad <= -3.9 and new_rad >= -5.5):
+            #left to back
+            self.position_send_obj.pose.orientation.z = 1
+            self.position_send_obj.pose.orientation.w = 0
+        elif (new_rad >= 2.3 and new_rad <= 4.0) or (new_rad <= -2.3 and new_rad >= -4.0):
+            #back to right
+            self.position_send_obj.pose.orientation.z = -0.707
+            self.position_send_obj.pose.orientation.w = 0.707
+ 
+        elif (new_rad >= 3.9 and new_rad <= 5.5) or (new_rad <= -0.7 and new_rad >= -2.4):
+            #right to front
+            self.position_send_obj.pose.orientation.z = 0
+            self.position_send_obj.pose.orientation.w = 1
+
+
+    def turn_cw(self):
+        #self.position_send_obj = self.position_obj
+        self.position_send_obj.pose.position.x = self.position_obj.pose.position.x
+        self.position_send_obj.pose.position.y = self.position_obj.pose.position.y
+
+        # calculate quarternion
+        qz = self.position_obj.pose.orientation.z
+        qw = self.position_obj.pose.orientation.w
+        if qz >= 0.0:
+            new_rad = 2 * math.acos(qw)
+        elif qz <= 0.0:
+            new_rad = -2 * math.acos(qw)
+
+        if new_rad < 0.0:
+            new_rad += 6.28
+
+        # set rotation angle
+        if (new_rad >= -0.8 and new_rad <= 0.8) or (new_rad >= 5.4 and new_rad <= 7.1) or (new_rad >= -5.4 and new_rad <= -7.1):
+            #forward to left
+            self.position_send_obj.pose.orientation.z = 0.707
+            self.position_send_obj.pose.orientation.w = 0.707
+        elif (new_rad >= 0.7 and new_rad <= 2.4) or (new_rad <= -3.9 and new_rad >= -5.5):
+            #left to back
+            self.position_send_obj.pose.orientation.z = 1
+            self.position_send_obj.pose.orientation.w = 0
+        elif (new_rad >= 2.3 and new_rad <= 4.0) or (new_rad <= -2.3 and new_rad >= -4.0):
+            #back to right
+            self.position_send_obj.pose.orientation.z = -0.707
+            self.position_send_obj.pose.orientation.w = 0.707
+ 
+        elif (new_rad >= 3.9 and new_rad <= 5.5) or (new_rad <= -0.7 and new_rad >= -2.4):
+            #right to front
+            self.position_send_obj.pose.orientation.z = 0
+            self.position_send_obj.pose.orientation.w = 1
+ 
+ 
 
     def up(self, distance):
-        speed = 0.5
-        self.velocity_obj.linear.z = speed
-        self.wait( (distance*1.0) / speed )
-        self.velocity_obj.linear.z = 0.0
-
-    def down(self, distance):
-        speed = 0.5
-        self.velocity_obj.linear.z = (-1.0) * speed
-        self.wait( (distance*1.0) / speed )
-        self.velocity_obj.linear.z = 0.0
+        #self.position_send_obj = self.position_obj
+        self.position_send_obj.pose.position.z += distance
 
     def stop(self):
-        for _ in range(5):
-            self.velocity_obj.linear.x = 0.0
-            self.velocity_obj.linear.y = 0.0
-            self.velocity_obj.linear.z = 0.0
-            self.velocity_obj.angular.x = 0.0
-            self.velocity_obj.angular.y = 0.0
-            self.velocity_obj.angular.z = 0.0
-            self.rate.sleep()
+        #print "stop start"
+        #for _ in range(5):
+        self.position_send_obj = self.position_obj
+        #self.rate.sleep()
+        #print "stop end"
 
     def takeoff(self):
         self.position_send_obj = self.position_obj
+        #self.xpos = self.position_obj.pose.position.x
+        #self.ypos = self.position_obj.pose.position.y
         for _ in range(10):
-            self.position_send_obj.pose.position.z = 1.2
+            self.position_send_obj.pose.position.z = self.height
+
             self.rate.sleep()
 
 

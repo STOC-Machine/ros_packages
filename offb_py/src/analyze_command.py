@@ -22,6 +22,9 @@ def analyze_command(command):
     # TODO: Catch error
     try:
         index = 0
+        no_drone = -1
+        action = 0
+        direction = 0
         
         if words[index] in DroneName: 
             no_drone = int(DroneName[ words[index] ])
@@ -69,6 +72,7 @@ def start_listen():
     command_publisher = cmd_pub()
     # create socket connection
     serv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    serv.settimeout(None)
     serv.bind(('0.0.0.0', Port))
     serv.listen(5)
     print "listening"
@@ -78,7 +82,10 @@ def start_listen():
         from_client = ''
         while True:
             #print "d"
-            data = conn.recv(4096)
+            try:
+                data = conn.recv(4096)
+            except socket.timeout:
+                break
             if not data: break
             # from_client += data
             #message = data.decode("utf-8")

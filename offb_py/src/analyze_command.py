@@ -109,7 +109,7 @@ def start_listen():
                     command_publisher.publish(command_tmp)
                     break
             #print "a"
-            command_publisher.publish(analyze_command(message))
+            #command_publisher.publish(analyze_command(message))
             #print "b"
             data = "" 
         print "disconnected"

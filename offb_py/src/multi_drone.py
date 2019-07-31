@@ -85,6 +85,10 @@ class multi_drone(object):
                     self.up(0.5)
                 elif direction == 3:
                     self.up(-0.5)
+                elif direction == 4:
+                    self.right(1.0)
+                elif direction == 5:
+                    self.right(-1.0)
             elif action == 1:
                 if direction == 0:
                     self.turn_ccw()
@@ -142,7 +146,7 @@ class multi_drone(object):
         self.wait(1)
         
         #arm and take off
-        input("arm?")
+        input("arm?") 
         self.arm_drone(True)
         self.takeoff()
 

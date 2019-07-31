@@ -95,6 +95,9 @@ def extract_and_collect_qr(val, src, position, output, socket):
         if distance(hull[i][0], [width_src, height_src]) < distance(hull[corner_bottom_right][0], [width_src, height_src]):
             corner_bottom_right = i
 
+    result = cv.imread(output)
+    if result == None:
+        result = np.zeros((1200, 1200, 3), dtype=np.uint8)
     if position == 0:
         # Find the point that will map into the middle of result
         pts1 = np.float32([hull[corner_top_left][0], hull[corner_bottom_left][0], hull[corner_top_right][0], hull[corner_bottom_right][0]])
@@ -104,7 +107,7 @@ def extract_and_collect_qr(val, src, position, output, socket):
 
         dst = cv.warpPerspective(src,M,(1200,1200))
 
-        result = cv.imread(output)
+        #result = cv.imread(output)
         result[600:1200, 600:1200] = dst[600:1200, 600:1200]
         cv.imwrite(output, result)
 
@@ -119,7 +122,7 @@ def extract_and_collect_qr(val, src, position, output, socket):
 
         dst = cv.warpPerspective(src,M,(1200,1200))
 
-        result = cv.imread(output)
+        #result = cv.imread(output)
         result[600:1200, 0:600] = dst[600:1200, 0:600 ]
         cv.imwrite(output, result)
 
@@ -134,7 +137,7 @@ def extract_and_collect_qr(val, src, position, output, socket):
 
         dst = cv.warpPerspective(src,M,(1200,1200))
 
-        result = cv.imread(output)
+        #result = cv.imread(output)
         result[0:600, 600:1200] = dst[0:600, 600:1200]
         cv.imwrite(output, result)
 
@@ -148,7 +151,7 @@ def extract_and_collect_qr(val, src, position, output, socket):
 
         dst = cv.warpPerspective(src,M,(1200,1200))
 
-        result = cv.imread(output)
+        #result = cv.imread(output)
         # result = cv.imread("qr/Ken/result_tmp.jpg")
         result[0:600, 0:600] = dst[0:600, 0:600]
         cv.imwrite(output, result)
@@ -171,7 +174,7 @@ def process_image(image, position, output, socket):
     max_thresh = 255
     # thresh = 100 # initial threshold
     thresh = 130 # initial threshold
-    extract_and_collect_qr(thresh, src, position, socket)
+    extract_and_collect_qr(thresh, src, position, output, socket)
 
 
 # parser = argparse.ArgumentParser(description='Code for Convex Hull tutorial.')

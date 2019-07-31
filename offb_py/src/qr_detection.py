@@ -183,6 +183,6 @@ def process_image(image, position, output, socket):
 # image = args.input
 # position = args.position
 # output = args.output
-process_image(image, int(position), output, socket )
+# process_image(image, int(position), output, socket )
 
 

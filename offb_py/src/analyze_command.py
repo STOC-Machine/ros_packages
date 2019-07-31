@@ -1,6 +1,14 @@
 #! /usr/bin/env python
 import rospy
 import csv 
+import time
+
+
+### qr code stuff ###
+from std_msgs.msg import Bool
+qr_pub.Publisher('uav0/mavros/qr', Bool, queue_size=1)
+qr_msg = Bool()
+qr_msg.data = True
 
 
 import pathlib
@@ -92,9 +100,11 @@ def start_listen():
                 command_tmp = analyze_command(command)
                 if command_tmp[0] == 4: # Screenshot
                     print("Analyze screenshot")
-                    process_image("image_input.jpg", command_tmp[1], "image_output.jpg", serv)
+                    qr_pub.publish(qr_msg)
+                    time.sleep(3)
+                    process_image("/home/stone3/images/image.jpg", command_tmp[1], "/home/stone3/images/image2.jpg", serv)
                     # print(command, "convert to: ", command_tmp)
-                if command_tmp != (-1,0,0):
+                if command_tmp != (-1,-1):
                     print("Valid command")
                     command_publisher.publish(command_tmp)
                     break

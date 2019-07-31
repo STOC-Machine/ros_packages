@@ -41,12 +41,7 @@ def analyze_command(command):
         elif words[index] == "save":
             direction = 0
         elif words[index] == "screenshot": ###
-            # TODO_DAVID: Save image screenshot into image_input.jpg
-            # ......
-
-            process_image("image_input.jpg", Position[words[index+1] + " " + words[index+2]], "image_output.jpg", serv)
-            print("Take screenshot")
-            return (-1, -1)
+            direction = Position[words[index+1] + " " + words[index+2]]
         # elif words[index] == "special":
         #     direction = (1,1)
 
@@ -88,7 +83,10 @@ def start_listen():
             print(type(data))
             for command in message:
                 command_tmp = analyze_command(command)
-                #print(command, "convert to: ", command_tmp)
+                if command_tmp[0] == 4: # Screenshot
+                    print("Analyze screenshot")
+                    process_image("image_input.jpg", command_tmp[1], "image_output.jpg", serv)
+                    # print(command, "convert to: ", command_tmp)
                 if command_tmp != (-1,0,0):
                     print("Valid command")
                     command_publisher.publish(command_tmp)

@@ -5,7 +5,7 @@ import csv
 
 import pathlib
 
-DroneName = {'red': 0, 'blue': 1, 'purple': 2, 'orange': 3}
+# DroneName = {'red': 0, 'blue': 1, 'purple': 2, 'orange': 3}
 DroneAction = {"fly": 0, "turn": 1, "stop": 2, "save": 3, "screenshot": 4, "special": 7}
 # Action = {"agree": 0}
 MoveDirection = {"forward": 0, "backward": 1, "back": 1, "up": 2, "down": 3, 
@@ -18,7 +18,7 @@ Port = 12459
 
 def analyze_command(command):
     # Convert command into format:
-    #      (drone_id, 
+    #      ()
     #          action (for drone or for computer to process image,
     #          direction_of_drone_movement)
 
@@ -29,18 +29,6 @@ def analyze_command(command):
     try:
         index = 0
         
-        if words[0] == "agree": # Agree with the image received from screenshot
-            return (-1,10,0)
-        if words[index] in DroneName: 
-            no_drone = int(DroneName[ words[index] ])
-            index+=1
-        else: # in case of redfly, etc.
-            for name in DroneName:
-                appearance = words[0].find(name)
-                if appearance == 0:
-                    no_drone = int(DroneName[ name ])
-                    words[0] = words[0][len(name):]
-                    # print("New", words[0])
         action = DroneAction[ words[index]]
 
         if words[index] == "fly":
@@ -51,22 +39,22 @@ def analyze_command(command):
             direction = 0
         elif words[index] == "save":
             direction = 0
-        elif words[index] == "screenshot":
+        elif words[index] == "screenshot": ###
             direction = 0
-        elif words[index] == "special":
-            direction = (1,1,1)
+        # elif words[index] == "special":
+        #     direction = (1,1)
 
-        return (no_drone, action, direction)
+        return (action, direction)
         # TODO: Consider velocity
     except KeyError:
         print("Invalid command")
-        return (-1,0,0)
+        return (-1, -1)
     except IndexError:
         print("Invalid command")
-        return (-1,0,0)
+        return (-1, -1)
 
 import socket
-# from cmd_pub import cmd_pub
+from cmd_pub import cmd_pub
 
 def start_listen():
     # create cmd_pub object
@@ -108,16 +96,16 @@ def start_listen():
 
 # Testing
 # analyze_command("blue fly forward")
-# analyze_command("red save me")
-# analyze_command("orange stop")
-# analyze_command("bluefly up")
-# analyze_command("redfly to me")
+# analyze_command("save me")
+# analyze_command("stop")
+# analyze_command("fly up")
+# analyze_command("fly to me")
 # analyze_command("blue fly")
 
 # analyze_command("blue FLY forward")
-# analyze_command("red SAVE me")
-# analyze_command("ORANGE stop")
-# analyze_command("blue screenshot")
+# analyze_command("SAve me")
+# analyze_command("ORANGE turn")
+# analyze_command("screenshot")
 # analyze_command("red fly TO ME")
 # analyze_command("blue fly")
 

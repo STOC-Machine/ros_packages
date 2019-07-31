@@ -12,6 +12,7 @@ MoveDirection = {"forward": 0, "backward": 1, "back": 1, "up": 2, "down": 3,
 "right": 4, "left": 5, "to": 6, "north":7, "south": 8, "east": 9, "west": 10}
 # 3DTurn = {"x y": 0, "x z": 1, "y z": 2}
 # Mode = {"attack": 0, "defense": 1}
+Position = {"bottom right": 0, "bottom left": 1, "top right": 2, "top left": 3}
 TurnDirection = {"counter-clockwise": 0, "counter": 0, "clockwise": 1, "back": 2}
 
 Port = 12459
@@ -40,7 +41,12 @@ def analyze_command(command):
         elif words[index] == "save":
             direction = 0
         elif words[index] == "screenshot": ###
-            direction = 0
+            # TODO_DAVID: Save image screenshot into image_input.jpg
+            # ......
+
+            process_image("image_input.jpg", Position[words[index+1] + " " + words[index+2]], "image_output.jpg", serv)
+            print("Take screenshot")
+            return (-1, -1)
         # elif words[index] == "special":
         #     direction = (1,1)
 
@@ -108,6 +114,7 @@ def start_listen():
 # analyze_command("screenshot")
 # analyze_command("red fly TO ME")
 # analyze_command("blue fly")
+
 
 ########        main program        ########
 if __name__ == "__main__":

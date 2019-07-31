@@ -32,6 +32,9 @@ class raspi_pub(object):
         self.distance_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.distance_socket.bind(('0.0.0.0', 8010 + num))
 
+        ### qr variable ###
+        self.image = None
+
         #shutdown procedure
         self.ctrl_c = False
         rospy.on_shutdown(self.shutdownhook)
@@ -57,10 +60,10 @@ class raspi_pub(object):
                 # Rewind the stream, open it as an image with PIL and do some
                 # processing on it
                 image_stream.seek(0)
-                image = Image.open(image_stream)
-        
+                self.image = Image.open(image_stream)
+
                 #helmet detection
-                np_im = numpy.array(image)
+                np_im = numpy.array(self.image)
                 np_im = cv2.cvtColor(np_im, cv2.COLOR_BGR2RGB)
                 img_ROI, self.sensor_data.data[1], self.sensor_data.data[2], (h,w) = test(np_im)
                 #print "x: ", centerX, "  y: ", centerY
@@ -76,6 +79,11 @@ class raspi_pub(object):
             self.connection.close()
             self.server_socket.close()
             self.distance_socket.close()
+
+
+
+    def get_image(self):
+        return self.image
 
 
 

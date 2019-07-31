@@ -8,11 +8,11 @@ class cmd_pub(object):
         #topics
         self.command_pub_0 = rospy.Publisher('uav0/mavros/command', 
                 Int32MultiArray, queue_size=1)
-        self.command_pub_1 = rospy.Publisher('uav1/mavros/command', 
+        #self.command_pub_1 = rospy.Publisher('uav1/mavros/command', 
                 Int32MultiArray, queue_size=1)
-        self.command_pub_2 = rospy.Publisher('uav2/mavros/command', 
+        #self.command_pub_2 = rospy.Publisher('uav2/mavros/command', 
                 Int32MultiArray, queue_size=1)
-        self.command_pub_3 = rospy.Publisher('uav3/mavros/command', 
+        #self.command_pub_3 = rospy.Publisher('uav3/mavros/command', 
                 Int32MultiArray, queue_size=1)
 
         #variables
@@ -32,10 +32,13 @@ class cmd_pub(object):
 
     def publish(self, msg):
         # set command msg
-        drone_num, action, direction = msg
+        #drone_num, 
+        action, direction = msg
         self.cmd.data = [action, direction]
 
         # publish to specific drone
+        self.command_pub_0.publish(self.cmd)
+        """
         if drone_num == 0:
             self.command_pub_0.publish(self.cmd)
         elif drone_num == 1:
@@ -49,6 +52,7 @@ class cmd_pub(object):
             self.command_pub_1.publish(self.cmd)
             self.command_pub_2.publish(self.cmd)
             self.command_pub_3.publish(self.cmd)
+        """
 
 
 if __name__ == '__main__':

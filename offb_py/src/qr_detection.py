@@ -23,12 +23,12 @@ def send_message(socket, qr_result):
     # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # sock.connect(('192.168.0.165', 12459))
     ## Send some data, this method can be called multiple times
-    socket.send(bytes(qr_result, 'utf-8'))
+    #socket.send(qr_result)
     ## Receive up to 4096 bytes from a peer
-    socket.recv(4096)
+    #socket.recv(4096)
     ## Close the socket connection, no more data transmission
     # sock.close()
-
+    pass
 def distance(point1, point2):
     return (point1[0] - point2[0])**2 + (point1[1] - point2[1])**2
 
@@ -37,7 +37,8 @@ def decode_QR(image, socket):
     from PIL import Image
     # print( decode(Image.open(image)))
     try:
-        print( decode(Image.open(image))[0].data)
+        qr_result = decode(Image.open(image))[0].data
+        print("Obtain result", qr_result)
         send_message(socket, qr_result)
         # print( decode(Image.open("qr/Easy/result.jpg"))[0].data)
     except IndexError:
@@ -52,7 +53,7 @@ def extract_and_collect_qr(val, src, position, output, socket):
     # Detect edges using Canny
     canny_output = cv.Canny(src_gray, threshold, threshold * 2)
     # Find contours
-    contours, _ = cv.findContours(canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    _, contours, _ = cv.findContours(canny_output, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
     # Find the convex hull object for all contours
     hull_list = []
@@ -96,8 +97,8 @@ def extract_and_collect_qr(val, src, position, output, socket):
             corner_bottom_right = i
 
     result = cv.imread(output)
-    if result == None:
-        result = np.zeros((1200, 1200, 3), dtype=np.uint8)
+    #if result == None:
+    #    result = np.zeros((1200, 1200, 3), dtype=np.uint8)
     if position == 0:
         # Find the point that will map into the middle of result
         pts1 = np.float32([hull[corner_top_left][0], hull[corner_bottom_left][0], hull[corner_top_right][0], hull[corner_bottom_right][0]])
@@ -159,13 +160,14 @@ def extract_and_collect_qr(val, src, position, output, socket):
         quadrant_received[3] = 1
 
     # if 0 not in quadrant_received:
-    decode_QR(output)
+    decode_QR(output,socket)
 
 def process_image(image, position, output, socket):
     # Load source image
-    src = cv.imread(cv.samples.findFile(image))
-    src = cv.resize(src, (int(WIDTH),int(HEIGHT) ) )
-    cv.imwrite("qr/resize.jpg", src)
+    #src = cv.imread(cv.samples.findFile(image))
+    src = cv.imread(image)
+    #src = cv.resize(src, (1200,1200 ) )
+    #cv.imwrite("qr/resize.jpg", src)
     if src is None:
         print('Could not open or find the image:', image)
         exit(0)

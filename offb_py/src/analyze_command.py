@@ -6,9 +6,9 @@ import time
 
 ### qr code stuff ###
 from std_msgs.msg import Bool
-qr_pub.Publisher('uav0/mavros/qr', Bool, queue_size=1)
+qr_pub = rospy.Publisher('uav0/mavros/qr', Bool, queue_size=1)
 qr_msg = Bool()
-qr_msg.data = True
+qr_msg = True
 
 
 import pathlib
@@ -21,7 +21,7 @@ MoveDirection = {"forward": 0, "backward": 1, "back": 1, "up": 2, "down": 3,
 # 3DTurn = {"x y": 0, "x z": 1, "y z": 2}
 # Mode = {"attack": 0, "defense": 1}
 Position = {"bottom right": 0, "bottom left": 1, "top right": 2, "top left": 3}
-TurnDirection = {"counter-clockwise": 0, "counter": 0, "clockwise": 1, "back": 2}
+TurnDirection = {"counter-clockwise": 0, "counter": 0, "clockwise": 1, "forward": 2, "back": 3, "right": 4, "left": 5}
 
 Port = 12459
 
@@ -67,6 +67,7 @@ def analyze_command(command):
 
 import socket
 from cmd_pub import cmd_pub
+from qr_detection import process_image
 
 def start_listen():
     # create cmd_pub object
@@ -138,10 +139,13 @@ if __name__ == "__main__":
     # run loop to listen for commands
     start_listen()
 
-    test cmd_pub
-    command_publisher = cmd_pub()
-    command_publisher.publish(analyze_command("orange stop"))
-    command_publisher.publish((0,1,1))
+    #test qr code
+    #qr_pub.publish(qr_msg)
+    #time.sleep(3)
+    #process_image("/home/stone3/images/image.jpg", 0, 
+    #        "/home/stone3/images/image2.jpg", serv)
+ 
+
 
 
 

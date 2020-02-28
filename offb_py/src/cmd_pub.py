@@ -9,11 +9,11 @@ class cmd_pub(object):
         self.command_pub_0 = rospy.Publisher('uav0/mavros/command', 
                 Int32MultiArray, queue_size=1)
         #self.command_pub_1 = rospy.Publisher('uav1/mavros/command', 
-                Int32MultiArray, queue_size=1)
+        #        Int32MultiArray, queue_size=1)
         #self.command_pub_2 = rospy.Publisher('uav2/mavros/command', 
-                Int32MultiArray, queue_size=1)
+        #        Int32MultiArray, queue_size=1)
         #self.command_pub_3 = rospy.Publisher('uav3/mavros/command', 
-                Int32MultiArray, queue_size=1)
+        #        Int32MultiArray, queue_size=1)
 
         #variables
         self.cmd = Int32MultiArray()

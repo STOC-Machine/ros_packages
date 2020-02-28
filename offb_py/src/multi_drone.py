@@ -94,6 +94,14 @@ class multi_drone(object):
                     self.turn_ccw()
                 elif direction == 1:
                     self.turn_cw()
+                elif direction == 2:
+                    self.turn_forward()
+                elif direction == 3:
+                    self.turn_back()
+                elif direction == 4:
+                    self.turn_right()
+                elif direction == 5:
+                    self.turn_left()
             elif action == 2:
                 self.stop()
             elif action == 4:
@@ -325,7 +333,22 @@ class multi_drone(object):
             self.position_send_obj.pose.orientation.z = 0
             self.position_send_obj.pose.orientation.w = 1
  
- 
+    def turn_forward(self):
+        self.position_send_obj.pose.orientation.z = 0
+        self.position_send_obj.pose.orientation.w = 1
+
+    def turn_back(self):
+        self.position_send_obj.pose.orientation.z = 1
+        self.position_send_obj.pose.orientation.w = 0
+
+    def turn_right(self):
+        self.position_send_obj.pose.orientation.z = -0.707
+        self.position_send_obj.pose.orientation.w = 0.707
+
+    def turn_left(self):
+        self.position_send_obj.pose.orientation.z = 0.707
+        self.position_send_obj.pose.orientation.w = 0.707
+
 
     def up(self, distance):
         #self.position_send_obj = self.position_obj

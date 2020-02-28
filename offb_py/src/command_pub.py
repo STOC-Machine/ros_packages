@@ -24,7 +24,7 @@ class command_pub(object):
     def key_cmd(self):
         while not self.ctrl_c:
             num = input("Cmd (0-fly 1-turn 2-stop 3-save 4-special 5-land): ")
-            direction = input("direction: 0-forward 1-back 2-up 3-down 4-right 5-left")
+            direction = input("direction: 0-forward 1-back 2-up/turn forward 3-down 4-right 5-left")
             self.cmd.data = [num, direction]
 
             #publish cmd

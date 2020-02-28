@@ -1,5 +1,8 @@
 # ignore all .pyc files
 *.pyc
 
+# qr image
+offb_py/src/image2.jpg
+
 # CMakelist
 CMakeLists.txt

@@ -47,7 +47,8 @@ class raspi_pub(object):
         self.ctrl_c = True
 
     def qr_cb(self, msg):
-        self.qr_flag = msg
+        print "qr_code called!!!!!!!!"
+        self.qr_flag = True
 
 
     def publish(self):
@@ -68,17 +69,20 @@ class raspi_pub(object):
                 image_stream.seek(0)
                 image = Image.open(image_stream)
 
-                ### qr code dump ###
-                # dump image
-                if self.qr_flag.data:
-                    cv2.imwrite("/home/stone3/images/image.jpg", image)
-                    self.qr_flag.data = False
-
                 #helmet detection
                 np_im = numpy.array(image)
                 np_im = cv2.cvtColor(np_im, cv2.COLOR_BGR2RGB)
                 img_ROI, self.sensor_data.data[1], self.sensor_data.data[2], (h,w) = test(np_im)
                 #print "x: ", centerX, "  y: ", centerY
+
+                ### qr code dump ###
+                # dump image
+                print self.qr_flag
+                if self.qr_flag:
+                    cv2.imwrite("/home/stone3/images/image.jpg", np_im)
+                    print "image wrote"
+                    self.qr_flag = False
+
                 
                 #write distance data to msg
                 dist, addr = self.distance_socket.recvfrom(1024)

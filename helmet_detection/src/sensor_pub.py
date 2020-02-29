@@ -9,7 +9,7 @@ import cv2
 import numpy
 from PIL import Image
 from helmet_detection import test
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, Bool
 
 
 class raspi_pub(object):
@@ -32,6 +32,12 @@ class raspi_pub(object):
         self.distance_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.distance_socket.bind(('0.0.0.0', 8010 + num))
 
+        ### qr code ###
+        self.qr_sub = rospy.Subscriber('/uav' + str(num) + 
+                '/mavros/qr', Bool, self.qr_cb)
+        self.qr_flag = Bool()
+        self.qr_flag.data = False
+
         #shutdown procedure
         self.ctrl_c = False
         rospy.on_shutdown(self.shutdownhook)
@@ -39,6 +45,10 @@ class raspi_pub(object):
 
     def shutdownhook(self):
         self.ctrl_c = True
+
+    def qr_cb(self, msg):
+        print "qr_code called!!!!!!!!"
+        self.qr_flag = True
 
 
     def publish(self):
@@ -58,12 +68,21 @@ class raspi_pub(object):
                 # processing on it
                 image_stream.seek(0)
                 image = Image.open(image_stream)
-        
+
                 #helmet detection
                 np_im = numpy.array(image)
                 np_im = cv2.cvtColor(np_im, cv2.COLOR_BGR2RGB)
                 img_ROI, self.sensor_data.data[1], self.sensor_data.data[2], (h,w) = test(np_im)
                 #print "x: ", centerX, "  y: ", centerY
+
+                ### qr code dump ###
+                # dump image
+                print self.qr_flag
+                if self.qr_flag:
+                    cv2.imwrite("/home/stone3/images/image.jpg", np_im)
+                    print "image wrote"
+                    self.qr_flag = False
+
                 
                 #write distance data to msg
                 dist, addr = self.distance_socket.recvfrom(1024)
@@ -76,6 +95,8 @@ class raspi_pub(object):
             self.connection.close()
             self.server_socket.close()
             self.distance_socket.close()
+
+
 
 
 

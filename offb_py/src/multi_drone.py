@@ -85,13 +85,28 @@ class multi_drone(object):
                     self.up(0.5)
                 elif direction == 3:
                     self.up(-0.5)
+                elif direction == 4:
+                    self.right(1.0)
+                elif direction == 5:
+                    self.right(-1.0)
             elif action == 1:
                 if direction == 0:
-                    self.turn_cw()
-                elif direction == 1:
                     self.turn_ccw()
+                elif direction == 1:
+                    self.turn_cw()
+                elif direction == 2:
+                    self.turn_forward()
+                elif direction == 3:
+                    self.turn_back()
+                elif direction == 4:
+                    self.turn_right()
+                elif direction == 5:
+                    self.turn_left()
             elif action == 2:
                 self.stop()
+            elif action == 4:
+                #todo
+                notta = 1
             elif action == 5:
                 self.set_mode("AUTO.LAND")
 
@@ -139,7 +154,7 @@ class multi_drone(object):
         self.wait(1)
         
         #arm and take off
-        input("arm?")
+        input("arm?") 
         self.arm_drone(True)
         self.takeoff()
 
@@ -301,16 +316,16 @@ class multi_drone(object):
 
         # set rotation angle
         if (new_rad >= -0.8 and new_rad <= 0.8) or (new_rad >= 5.4 and new_rad <= 7.1) or (new_rad >= -5.4 and new_rad <= -7.1):
-            #forward to left
-            self.position_send_obj.pose.orientation.z = 0.707
+            #forward to right
+            self.position_send_obj.pose.orientation.z = -0.707
             self.position_send_obj.pose.orientation.w = 0.707
         elif (new_rad >= 0.7 and new_rad <= 2.4) or (new_rad <= -3.9 and new_rad >= -5.5):
-            #left to back
-            self.position_send_obj.pose.orientation.z = 1
+            #right to back
+            self.position_send_obj.pose.orientation.z = -1
             self.position_send_obj.pose.orientation.w = 0
         elif (new_rad >= 2.3 and new_rad <= 4.0) or (new_rad <= -2.3 and new_rad >= -4.0):
-            #back to right
-            self.position_send_obj.pose.orientation.z = -0.707
+            #back to left
+            self.position_send_obj.pose.orientation.z = 0.707
             self.position_send_obj.pose.orientation.w = 0.707
  
         elif (new_rad >= 3.9 and new_rad <= 5.5) or (new_rad <= -0.7 and new_rad >= -2.4):
@@ -318,7 +333,22 @@ class multi_drone(object):
             self.position_send_obj.pose.orientation.z = 0
             self.position_send_obj.pose.orientation.w = 1
  
- 
+    def turn_forward(self):
+        self.position_send_obj.pose.orientation.z = 0
+        self.position_send_obj.pose.orientation.w = 1
+
+    def turn_back(self):
+        self.position_send_obj.pose.orientation.z = 1
+        self.position_send_obj.pose.orientation.w = 0
+
+    def turn_right(self):
+        self.position_send_obj.pose.orientation.z = -0.707
+        self.position_send_obj.pose.orientation.w = 0.707
+
+    def turn_left(self):
+        self.position_send_obj.pose.orientation.z = 0.707
+        self.position_send_obj.pose.orientation.w = 0.707
+
 
     def up(self, distance):
         #self.position_send_obj = self.position_obj

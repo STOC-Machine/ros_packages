@@ -90,10 +90,14 @@ When you are done, you can Ctrl-C the programs to quit, and exit out of gazebo. 
 ### Brief Code Explanantion
 The main files that we are working with here are:
 * launch-common.sh
-  * 
-* simulation_main.py
+ * this makes the px4-firmware directory a ROS package. This is needed so ROS can find the this package and run the code it needs to
+* simulation_main.launch
+ * roslaunch file that starts the px4 sitl, gazebo, and mavros to communicate with the sitl vehicle
+ * sitl stand for simulation in the loop. It's the drones software running on the computer
 * multi_drone.py
+ * The main python file that sends messages to the drone and tells it where to go. The code uses topics created by mavros to send flight messages to the simulated drone.
 * command_pub.py
+ * This code allows the user to input commands and see the drone dly around in the simulator. It specifically spends mesages to `multi_drone.py` telling it to update its messages that it is sending to the drone.
 
 Glance through each file to try and get a feel for how things work together. Feel free to change the code or add new files. Just don't push any of your changes back to master. Creating your own branch for messing around with things could be useful.
 
